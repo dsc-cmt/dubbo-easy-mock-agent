@@ -2,66 +2,42 @@
 一个用于对dubbo接口进行mock的agent
 
 ## 支持版本
-apache dubbo 2.7.5
+目前仅支持apache dubbo 2.7.5
 
 ## 原理
-通过javassist对dubbo框架中的InvokerInvocationHandler植入mock逻辑，生成新的InvokerInvocationHandler大致如下
+通过javassist对dubbo框架中的MockClusterInvoker植入mock逻辑(可以避免No Provider)，植入的逻辑如下
+
+添加field
 ```
-public class InvokerInvocationHandler implements InvocationHandler {
-    private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
-    private final Invoker<?> invoker;
+private static final org.apache.dubbo.common.config.Configuration CONFIGURATION =  org.apache.dubbo.rpc.model.ApplicationModel.getEnvironment().getConfiguration();
 
-    //植入逻辑
-    private static final Configuration CONFIGURATION =  Environment.getInstance().getConfiguration("easymock",null);
-    //植入逻辑
-    private static final boolean IS_MOCK = Boolean.parseBoolean(CONFIGURATION.getString("enable","false"));
+private static final boolean IS_MOCK = Boolean.parseBoolean(getConfig("easymock.enable","false"));
 
-    public InvokerInvocationHandler(Invoker<?> handler) {
-        this.invoker = handler;
+```
+添加方法
+```
+private static String getConfig(String key, String defaultValue) {
+    String value;
+    org.apache.dubbo.common.config.configcenter.DynamicConfiguration dynamicConfiguration = org.apache.dubbo.common.config.configcenter.DynamicConfiguration.getDynamicConfiguration();
+    if ((value = dynamicConfiguration.getConfig(key, "easymock")) != null) {
+        return value;
     }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        String methodName = method.getName();
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        if (method.getDeclaringClass() == Object.class) {
-            return method.invoke(invoker, args);
-        }
-        if ("toString".equals(methodName) && parameterTypes.length == 0) {
-            return invoker.toString();
-        }
-        if ("hashCode".equals(methodName) && parameterTypes.length == 0) {
-            return invoker.hashCode();
-        }
-        if ("equals".equals(methodName) && parameterTypes.length == 1) {
-            return invoker.equals(args[0]);
-        }
-
-        //植入逻辑
-        if(IS_MOCK){
-            String mockValue= CONFIGURATION.getString(invoker.getInterface().getName()+"#"+method.getName());
-            if(mockValue!=null&&mockValue.length()>0){
-                Type[] returnTypes = ClassHelper.getReturnType(invoker.getInterface().getName(), method.getName(), method.getParameterTypes());
-                return MockValueResolver.resolve(mockValue, returnTypes[0], returnTypes.length > 1 ? returnTypes[1] : null);
-            }
-        }
-
-        return invoker.invoke(createInvocation(method, args)).recreate();
-    }
-
-    private RpcInvocation createInvocation(Method method, Object[] args) {
-        RpcInvocation invocation = new RpcInvocation(method, args);
-        if (RpcUtils.hasFutureReturnType(method)) {
-            invocation.setAttachment(Constants.FUTURE_RETURNTYPE_KEY, "true");
-            invocation.setAttachment(Constants.ASYNC_KEY, "true");
-        }
-        return invocation;
-    }
-
+    return CONFIGURATION.getString(key, defaultValue);
 }
 
 ```
-与Dubbo-easy-mock项目不同不是，这边不会将请求转发到外部的Http Mock服务器，而是使用到了Dubbo2.7新增的配置中心特性。会优先从配置中心读取配置，然后再从本地系统变量,以及dubbo.properties读取。
+invoke方法前植入mock逻辑
+```
+if(IS_MOCK){
+    String mockValue= getConfig("easymock."+invocation.getServiceName()+"#"+invocation.getMethodName(),null);
+    if(mockValue!=null&&mockValue.length()>0){
+        java.lang.reflect.Type[] returnTypes = io.github.cmt.dema.util.ClassHelper.getReturnType($1.getServiceName(), $1.getMethodName(), $1.getParameterTypes());
+        return new org.apache.dubbo.rpc.AppResponse(io.github.cmt.dema.MockValueResolver.resolve(mockValue, returnTypes[0], returnTypes.length > 1 ? returnTypes[1] : null));
+    }
+}
+```
+
+与[dubbo-easy-mock](https://github.com/dsc-cmt/dubbo-easy-mock)项目不同不是，这边不会将请求转发到外部的Http Mock服务器，而是使用到了Dubbo2.7新增的配置中心特性，会优先从外部配置中心(比如apollo)读取配置。
 
 ## 使用方式
 0. 打包得到`dubbo-easy-mock-agent.jar`

@@ -60,7 +60,7 @@ public class PermainAgent {
                         StringBuilder code = new StringBuilder();
                         code.append("{");//#0
 //                        code.append("System.out.println(\"=========\");");
-                        code.append("System.out.println(IS_MOCK);");
+//                        code.append("System.out.println(IS_MOCK);");
                         code.append("if(IS_MOCK){");//#1
                         code.append("String mockValue= getConfig(\"easymock.\"+$1.getServiceName()+\"#\"+$1.getMethodName(),null);");
 //                        code.append("System.out.println(\"easymock.\"+$1.getServiceName()+\"#\"+$1.getMethodName());");
