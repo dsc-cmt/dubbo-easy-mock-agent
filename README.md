@@ -2,7 +2,7 @@
 一个用于对dubbo接口进行mock的agent
 
 ## 支持版本
-apache dubbo 2.7.0 ++
+apache dubbo 2.7.5
 
 ## 原理
 通过javassist对dubbo框架中的InvokerInvocationHandler植入mock逻辑，生成新的InvokerInvocationHandler大致如下
@@ -61,7 +61,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
 }
 
 ```
-与Dubbo-easy-mock项目不同不是，这边不会将请求转发到外部的Http Mock服务器，而是使用到了Dubbo2.7新增的配置中心特性，不管是系统参数，配置文件，还是外部配置都封装到了Configuration类。
+与Dubbo-easy-mock项目不同不是，这边不会将请求转发到外部的Http Mock服务器，而是使用到了Dubbo2.7新增的配置中心特性。会优先从配置中心读取配置，然后再从本地系统变量,以及dubbo.properties读取。
 
 ## 使用方式
 0. 打包得到`dubbo-easy-mock-agent.jar`
@@ -70,7 +70,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
 ## mock配置方式
 
-首先所有的配置都是以easymock作为前缀
+0. 配置格式
+不管是配置中心还是系统参数，或者properties文件，配置格式如下
 ```
 ## 开关
 easymock.enable=true
@@ -79,14 +80,18 @@ easymock.io.github.shengchaojie.demo.DemoService#returnString={"data":"7758258"}
 ```
 
 优先级从高到低如下
-1. 系统参数
+
+1. 外部配置，最新版dubbo支持apollo,consul,etcd,nacos,zookeeper
+以常用的apollo为例，在apollo新建一个namespace=easymock,格式见0
+
+2. 系统参数
 通过jvm参数—D进行的配置
 ```
 -Deasymock.enable=true
 -Deasymock.io.github.shengchaojie.demo.DemoService#returnString={"data":"7758258"}
 ```
 
-2. 外部配置，最新版dubbo支持apollo,consul,etcd,nacos,zookeeper
-使用前提是你的dubbo应用使用了外部配置
+3.本地配置文件
+见0
 
-3.
+## 推荐测试demo
