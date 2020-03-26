@@ -51,7 +51,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Premain-Class>io.github.cmt.dema.PermainAgent</Premain-Class>
+                            <Premain-Class>io.github.cmt.dema.PremainAgent</Premain-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
                         </manifestEntries>

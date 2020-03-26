@@ -12,7 +12,7 @@ import java.security.ProtectionDomain;
  * @author shengchaojie
  * @date 2020-03-24
  **/
-public class PermainAgent {
+public class PremainAgent {
 
     private static Instrumentation INST;
 
