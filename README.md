@@ -2,7 +2,7 @@
 一个用于对dubbo接口进行mock的agent
 
 ## 支持版本
-目前仅支持apache dubbo 2.7.5
+动态配置相关类改动比较大,目前仅支持apache dubbo 2.7.5
 
 ## 原理
 通过javassist对dubbo框架中的MockClusterInvoker植入mock逻辑(可以避免No Provider)，植入的逻辑如下
