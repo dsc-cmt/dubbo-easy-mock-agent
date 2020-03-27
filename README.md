@@ -7,7 +7,7 @@
 ## 原理
 通过javassist对dubbo框架中的MockClusterInvoker植入mock逻辑(可以避免No Provider)，植入的逻辑如下
 
-添加field
+添加字段
 ```
 private static final org.apache.dubbo.common.config.Configuration CONFIGURATION =  org.apache.dubbo.rpc.model.ApplicationModel.getEnvironment().getConfiguration();
 
@@ -26,7 +26,7 @@ private static String getConfig(String key, String defaultValue) {
 }
 
 ```
-invoke方法前植入mock逻辑
+invoke方法调用开始植入mock逻辑
 ```
 if(IS_MOCK){
     String mockValue= getConfig("easymock."+invocation.getServiceName()+"#"+invocation.getMethodName(),null);
@@ -70,4 +70,12 @@ easymock.io.github.shengchaojie.demo.DemoService#returnString={"data":"7758258"}
 3.本地配置文件
 见0
 
-## 推荐测试demo
+## 测试demo
+使用dubbo官方的用例项目[dubbo-samples](https://github.com/apache/dubbo-samples)中的dubbo-samples-configcenter-apollo模块
+
+1. 启动apollo
+这边使用到它提供的docker-compose配置文件，在该配置文件路径执行 docker-compose up -d 命令启动相关服务
+
+2. 一些配置修改
+
+3. 启动consumer
